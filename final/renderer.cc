@@ -21,11 +21,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "omp.h"
+
 #include "color.h"
 #include "mandelbox.h"
 #include "camera.h"
 #include "vector3d.h"
 #include "3d.h"
+#include "getcolor.h"
 
 extern double getTime();
 extern void   printProgress( double perc, double time );
@@ -34,41 +37,43 @@ extern void rayMarch (const RenderParams &render_params, const vec3 &from, const
 extern vec3 getColour(const pixelData &pixData, const RenderParams &render_params,
 		      const vec3 &from, const vec3  &direction);
 
+extern void foo();
+
 void renderFractal(const CameraParams &camera_params, const RenderParams &renderer_params, 
 		   unsigned char* image)
 {
-
-  
   const double eps = pow(10.0, renderer_params.detail); 
-  double farPoint[3];
-  vec3 to, from;
+  vec3 from;
   
   SET_POINT(from,camera_params.camPos)
   
   const int height = renderer_params.height;
   const int width  = renderer_params.width;
-  
-  pixelData pix_data;
-  
-  double time = getTime();
-  vec3 color;
-  
-  int i,j,k;
+  int j;
+  //double time = getTime();
   //int i=465,j=57,k;
 
 //*
   
-//#pragma omp parallel default(shared)
-{ //private(j,i,k,to,from,pix_data,color,farPoint) // default(none)shared(image,camera_params,renderer_params) private(j,i,k,to,from,pix_data,color,time,farPoint)
-//#pragma omp for
-  for(j = 0; j < height; j++)
-    {
-//#pragma omp parallel
-{
-      //for each column pixel in the row
+omp_set_num_threads(4); 
+
+//private(j,to,from,pix_data,color,time,farPoint) shared(camera_params,renderer_params)
+// default(none)shared(image,camera_params,renderer_params)
+//shared(image)//default(none) //default(shared)
 //#pragma omp for private(i,farPoint,from,to,color,pix_data,camera_params,renderer_params)
-      for(i = 0; i <width; i++)
-	{
+
+//#pragma omp parallel 
+#pragma omp parallel for //default(none) shared(from,image,camera_params,renderer_params)
+  for(j = 0; j < height; j++){
+      int i=0;  
+      for(i = 0; i <width; i++){
+	  pixelData pix_data;
+  	  vec3 color;
+	  double farPoint[3];
+	  vec3 to;
+
+	  foo();
+
 	  // get point on the 'far' plane
 	  // since we render one frame only, we can use the more specialized method
 	  UnProject(i, j, camera_params, farPoint);
@@ -84,14 +89,13 @@ void renderFractal(const CameraParams &camera_params, const RenderParams &render
 	  color = getColour(pix_data, renderer_params, from, to);
 
 	  //save colour into texture
-	  k = (j * width + i)*3;
+	  int k = (j * width + i)*3;
 	  image[k+2] = (unsigned char)(color.x * 255);
 	  image[k+1] = (unsigned char)(color.y * 255);
 	  image[k]   = (unsigned char)(color.z * 255);
-	}
-      printProgress((j+1)/(double)height,getTime()-time);
-    }
-}//omp inner
-}//omp outer
+	} // inner for
+      //printProgress((j+1)/(double)height,getTime()-time);
+    }//end of outer for
+
   printf("\n rendering done:\n");
 }

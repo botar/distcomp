@@ -24,6 +24,7 @@
 
 #include "color.h"
 #include "renderer.h"
+#include "mandelboxde.h"
 
 extern double DE(const vec3 &p);
 void normal (const vec3 & p, vec3 & normal);

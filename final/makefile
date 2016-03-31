@@ -1,9 +1,9 @@
 
 CC       =  g++
-FLAGS    = -O3 -Wall -std=gnu++0x -fopenmp #-E -g -pg
+FLAGS    = -O3 -Wall -std=gnu++0x -fopenmp -g -pg #-E
 CFLAGS   = $(FLAGS)
 CXXFLAGS = $(FLAGS)
-LDFLAGS  = -lm 
+LDFLAGS  = -lm -L.
 
 PROGRAM_NAME=mandelbox
 
